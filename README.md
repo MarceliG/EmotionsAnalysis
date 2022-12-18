@@ -1,4 +1,5 @@
-# sma
+# Emotion recognition in text
+Recognition of emotions in text based on online reviews using machine learning methods.
 
-# Setup 
-pip3 install -r requirements.txt
+## Installation 
+pip install -r requirements.txt
