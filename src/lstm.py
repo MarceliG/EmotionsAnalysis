@@ -1,17 +1,19 @@
-import os
 import json
+import os
+
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from utils.tokenizer import load_tokenizer
 from utils.const import PREPROCESSED_DATA_DIR, makedir
+from utils.tokenizer import load_tokenizer
 
 # Model params
-D = 20           # Embedding dimensionality
-M = 15           # Hidden / Cell state dimensionality
+D = 20  # Embedding dimensionality
+M = 15  # Hidden / Cell state dimensionality
 EPOCHS = 10
 
 MODEL_SAVE_PATH = os.path.join("models", "lstm")
+
 
 def train():
     trn, val = load_datasets()
@@ -20,8 +22,10 @@ def train():
     tokenizer = load_tokenizer()
     tokens_trn = tokenizer.texts_to_sequences(trn["text"])
     tokens_val = tokenizer.texts_to_sequences(val["text"])
-    V = len(tokenizer.word_index)                   # Vocabulary size
-    T = trn["text"].map(lambda x: len(x)).max()     # Input sequence size / max sequence length
+    V = len(tokenizer.word_index)  # Vocabulary size
+    T = (
+        trn["text"].map(lambda x: len(x)).max()
+    )  # Input sequence size / max sequence length
 
     # Padding
     data_trn = tf.keras.utils.pad_sequences(tokens_trn, T, padding="post")
@@ -29,7 +33,7 @@ def train():
 
     model = None
     for emotion in trn.columns[1:]:
-        # 
+        #
         y_trn = tf.keras.utils.to_categorical(trn[emotion])
         y_val = tf.keras.utils.to_categorical(val[emotion])
         K = y_trn.shape[1]
@@ -49,16 +53,11 @@ def train():
                 tf.keras.metrics.Accuracy(name="accuracy"),
                 tf.keras.metrics.AUC(curve="PR", name="pr_auc"),
                 tf.keras.metrics.AUC(curve="ROC", name="roc_auc"),
-            ]
+            ],
         )
 
         # Training model
-        r = model.fit(
-            data_trn,
-            y_trn,
-            epochs=EPOCHS,
-            validation_data=(data_val, y_val)
-        )
+        r = model.fit(data_trn, y_trn, epochs=EPOCHS, validation_data=(data_val, y_val))
 
         # Saving results
         model.save(makedir(os.path.join(MODEL_SAVE_PATH, "models", emotion)))
@@ -71,17 +70,24 @@ def train():
     with open(os.path.join(MODEL_SAVE_PATH, "config.json"), "w") as f:
         json.dump({"T": T}, f)
 
+
 def history() -> None:
     pass
+
 
 def predict() -> None:
     pass
 
+
 def evaluate() -> None:
     pass
 
+
 def load_datasets() -> tuple[pd.DataFrame, pd.DataFrame]:
-    return pd.read_excel(os.path.join(PREPROCESSED_DATA_DIR, "train.xlsx")), pd.read_excel(os.path.join(PREPROCESSED_DATA_DIR, "valid.xlsx"))
+    return pd.read_excel(
+        os.path.join(PREPROCESSED_DATA_DIR, "train.xlsx")
+    ), pd.read_excel(os.path.join(PREPROCESSED_DATA_DIR, "valid.xlsx"))
+
 
 if __name__ == "__main__":
     train()
